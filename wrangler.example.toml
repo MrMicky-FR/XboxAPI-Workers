@@ -1,0 +1,20 @@
+name = "xboxapi-workers"
+type = "javascript"
+zone_id = ""
+account_id = ""
+route = ""
+workers_dev = true
+
+kv-namespaces = [
+    { binding = "TOKEN_STORE", id = "" }
+]
+
+[secrets]
+XBOX_ACCESS_TOKEN = ""
+XBOX_REFRESH_TOKEN = ""
+#WEBHOOK_URL = ""
+
+[build]
+command = "npm install && npm run build"
+[build.upload]
+format = "service-worker"

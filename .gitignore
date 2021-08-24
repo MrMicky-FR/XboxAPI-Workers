@@ -1,0 +1,10 @@
+# JetBrains
+.idea/
+
+# NodeJS
+node_modules/
+dist/
+transpiled/
+
+# Wrangler
+wrangler.toml
