@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^2.2.2",
+    "@types/itty-router-extras": "^0.4.0",
     "@types/jest": "^26.0.23",
     "@types/luxon": "^2.0.0",
     "@types/service-worker-mock": "^2.0.1",
@@ -28,6 +29,8 @@
     "eslint": "^7.21.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-config-typescript": "^3.0.0",
+    "itty-router": "^2.4.2",
+    "itty-router-extras": "^0.4.2",
     "jest": "^27.0.1",
     "luxon": "^2.0.2",
     "prettier": "^2.3.0",

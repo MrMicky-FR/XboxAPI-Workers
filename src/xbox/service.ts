@@ -94,7 +94,8 @@ export class XboxService {
 
     this.requests.push('fetch')
 
-    const settings = 'AppDisplayName,Gamerscore,Gamertag,PublicGamerpic'
+    const settings =
+      'Gamerscore,Gamertag,PublicGamerpic,XboxOneRep,AccountTier,Bio,Location'
     const response = await fetch(
       `https://profile.xboxlive.com/users/${profile}/profile/settings?settings=${settings}`,
       {
@@ -121,19 +122,25 @@ export class XboxService {
 
     const json = await response.json()
     const data = json.profileUsers[0]
-    const xboxProfile: XboxProfile = {
-      xuid: data.id,
-      gamertag: '',
-      gamerpic: '',
-    }
+    const xboxProfile: XboxProfile = { xuid: data.id }
 
     for (let i = 0; i < data.settings.length; i++) {
       const key = data.settings[i].id
+      const value = data.settings[i].value
 
-      if (key === 'Gamertag') {
-        xboxProfile.gamertag = data.settings[i].value
-      } else if (key === 'PublicGamerpic') {
-        xboxProfile.gamerpic = data.settings[i].value
+      switch (key) {
+        case 'PublicGamerpic':
+          xboxProfile.gamerpic = value
+          break
+        case 'AccountTier':
+          xboxProfile.tier = value
+          break
+        case 'XboxOneRep':
+          xboxProfile.reputation = value
+          break
+        default:
+          xboxProfile[key.toLowerCase()] = value
+          break
       }
     }
 
@@ -160,11 +167,7 @@ export class XboxService {
     )
 
     if (!response.ok) {
-      const body = await response.text()
-
-      throw new Error(
-        `Invalid status from Xbox refresh: ${response.status} - ${body}`,
-      )
+      throw new Error(`Invalid status from Xbox refresh: ${response.status}`)
     }
 
     const [accessToken, refreshToken] = XboxToken.fromRefreshResponse(
@@ -204,11 +207,7 @@ export class XboxService {
     )
 
     if (!response.ok) {
-      throw new Error(
-        `Invalid status from Xbox authentification: ${
-          response.status
-        } - ${await response.text()}`,
-      )
+      throw new Error(`Invalid status from Xbox auth: ${response.status}`)
     }
 
     this.userToken = XboxToken.fromAuthResponse(await response.json())

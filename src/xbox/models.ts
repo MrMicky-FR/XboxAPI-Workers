@@ -2,8 +2,7 @@ import { DateTime } from 'luxon'
 
 export interface XboxProfile {
   xuid: string
-  gamertag: string
-  gamerpic: string
+  [key: string]: string | number
 }
 
 export interface ProfileResponse {

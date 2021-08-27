@@ -1,38 +1,20 @@
+import { Router, Request } from 'itty-router'
+import { text, json, missing, error } from 'itty-router-extras'
 import { XboxService } from './xbox/service'
 
 declare const WEBHOOK_URL: string | undefined
 
-export async function handleRequest(request: Request): Promise<Response> {
-  const url = new URL(request.url)
+const router = Router()
 
-  if (url.pathname === '/') {
-    return new Response('Welcome to XboxAPI Workers.')
-  }
+router
+  .get('/', () => text('Welcome to XboxAPI Workers.'))
+  .get('/profiles/search/:name', handleSearchRequest)
+  .get('/profiles/:id', handleProfileRequest)
+  .get('/search/:name', handleSearchRequest)
+  .all('*', () => missing())
 
-  // Compatibility for existing users
-  if (url.pathname.startsWith('/profiles/search/')) {
-    url.pathname = url.pathname.replace('/profiles/', '/')
-  }
-
-  const split = url.pathname.split('/').slice(1)
-
-  if (split.length < 2) {
-    return new Response(`Not found`, { status: 404 })
-  }
-
-  const [action, user] = split
-
-  try {
-    if (action === 'profiles') {
-      return await handleProfileRequest(user)
-    }
-
-    if (action === 'search') {
-      return await handleSearchRequest(user)
-    }
-
-    return new Response(`Unknown action: ${action}`, { status: 404 })
-  } catch (e) {
+export function handleRequest(request: Request): Promise<Response> {
+  return router.handle(request).catch(async (e: Error) => {
     console.error(e.toString())
 
     if (typeof WEBHOOK_URL === 'string') {
@@ -47,50 +29,40 @@ export async function handleRequest(request: Request): Promise<Response> {
       })
     }
 
-    return new Response(`An error occurred: ${e}`, { status: 500 })
-  }
+    return error(500, `Internal server error: ${e}`)
+  })
 }
 
-async function handleProfileRequest(id: string): Promise<Response> {
-  if (!/^\d+$/.test(id)) {
-    return new Response('Invalid XUID format', { status: 400 })
+async function handleProfileRequest(request: Request): Promise<Response> {
+  const id = request.params?.id
+
+  if (!id || !/^\d+$/.test(id)) {
+    return error(400, 'Invalid XUID format')
   }
 
   const service = await XboxService.create()
   const response = await service.getProfileByXuid(id)
 
   if (response.profile === null) {
-    return new Response(`User '${id}' not found (${response.info})`, {
-      status: 404,
-    })
+    return missing(`User '${name}' not found (${response.info})`)
   }
 
-  return new Response(
-    JSON.stringify({ ...response.profile, debug: response.info }),
-    {
-      headers: { 'Content-Type': 'application/json' },
-    },
-  )
+  return json({ ...response.profile, debug: response.info })
 }
 
-async function handleSearchRequest(name: string): Promise<Response> {
-  if (name.length === 0 || name.includes('(') || name.includes(')')) {
-    return new Response('Invalid gamertag format', { status: 400 })
+async function handleSearchRequest(request: Request): Promise<Response> {
+  const name = request.params?.name
+
+  if (!name || name.includes('(') || name.includes(')')) {
+    return error(400, 'Invalid gamertag format')
   }
 
   const service = await XboxService.create()
   const response = await service.getProfileByGamertag(name)
 
   if (response.profile === null) {
-    return new Response(`User '${name}' not found (${response.info})`, {
-      status: 404,
-    })
+    return missing(`User '${name}' not found (${response.info})`)
   }
 
-  return new Response(
-    JSON.stringify({ ...response.profile, debug: response.info }),
-    {
-      headers: { 'Content-Type': 'application/json' },
-    },
-  )
+  return json({ ...response.profile, debug: response.info })
 }
