@@ -1,13 +1,13 @@
 import { Router, Request } from 'itty-router'
-import { text, json, missing, error } from 'itty-router-extras'
+import { json, missing, error } from 'itty-router-extras'
 import { XboxService } from './xbox/service'
-
+import html from './html'
 declare const WEBHOOK_URL: string | undefined
 
 const router = Router()
 
 router
-  .get('/', () => text('Welcome to XboxAPI Workers.'))
+  .get('/', home)
   .get('/profiles/search/:name', handleSearchRequest)
   .get('/profiles/:id', handleProfileRequest)
   .get('/search/:name', handleSearchRequest)
@@ -43,7 +43,7 @@ async function handleProfileRequest(request: Request): Promise<Response> {
   const service = await XboxService.create()
   const response = await service.getProfileByXuid(id)
 
-  if (response.profile === null) {
+  if (!response.profile) {
     return missing(`User '${name}' not found (${response.info})`)
   }
 
@@ -60,9 +60,17 @@ async function handleSearchRequest(request: Request): Promise<Response> {
   const service = await XboxService.create()
   const response = await service.getProfileByGamertag(name)
 
-  if (response.profile === null) {
+  if (!response.profile) {
     return missing(`User '${name}' not found (${response.info})`)
   }
 
   return json({ ...response.profile, debug: response.info })
+}
+
+async function home(): Promise<Response> {
+  return new Response(html, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+    },
+  })
 }

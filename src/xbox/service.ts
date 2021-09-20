@@ -8,6 +8,7 @@ import {
 } from './models'
 
 declare const TOKEN_STORE: KVNamespace | undefined
+declare const PROFILES_CACHE: KVNamespace | undefined
 declare const XBOX_ACCESS_TOKEN: string | undefined
 declare const XBOX_REFRESH_TOKEN: string | undefined
 
@@ -60,11 +61,34 @@ export class XboxService {
   }
 
   async getProfileByXuid(id: string): Promise<ProfileResponse> {
-    return this.fetchProfileByRawId(`xuid(${id})`)
+    return this.getProfileByRawId(`xuid(${id})`)
   }
 
   async getProfileByGamertag(name: string): Promise<ProfileResponse> {
-    return this.fetchProfileByRawId(`gt(${name})`)
+    return this.getProfileByRawId(`gt(${name})`)
+  }
+
+  private async getProfileByRawId(profileId: string): Promise<ProfileResponse> {
+    if (typeof PROFILES_CACHE === 'undefined') {
+      return this.fetchProfileByRawId(profileId) // No cache is available
+    }
+
+    const cached = await PROFILES_CACHE.get(profileId)
+
+    if (cached) {
+      return {
+        profile: cached === 'undefined' ? null : JSON.parse(cached),
+        info: `Cached profile`,
+      }
+    }
+
+    const response = await this.fetchProfileByRawId(profileId)
+
+    await PROFILES_CACHE.put(profileId, JSON.stringify(response.profile), {
+      expirationTtl: 3600, // 1 hour
+    })
+
+    return response
   }
 
   private async auth() {

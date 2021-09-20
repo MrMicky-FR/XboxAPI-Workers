@@ -6,7 +6,8 @@ route = ""
 workers_dev = true
 
 kv-namespaces = [
-    { binding = "TOKEN_STORE", id = "" }
+    { binding = "TOKEN_STORE", id = "" },
+#    { binding = "PROFILES_CACHE", id = "" }, # (Optional) Used to reduce responses time
 ]
 
 [secrets]
