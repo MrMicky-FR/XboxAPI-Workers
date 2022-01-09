@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import { Router, Request } from 'itty-router'
 import { json, missing, error } from 'itty-router-extras'
 import { XboxService } from './xbox/service'
@@ -53,7 +54,7 @@ async function handleProfileRequest(request: Request): Promise<Response> {
 async function handleSearchRequest(request: Request): Promise<Response> {
   const name = request.params?.name
 
-  if (!name || name.includes('(') || name.includes(')')) {
+  if (!name || name.length > 16 || name.includes('(') || name.includes(')')) {
     return error(400, 'Invalid gamertag format')
   }
 
@@ -68,7 +69,7 @@ async function handleSearchRequest(request: Request): Promise<Response> {
 }
 
 async function home(): Promise<Response> {
-  return new Response(html, {
+  return new Response(html.replace('{year}', DateTime.now().year.toString()), {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
     },

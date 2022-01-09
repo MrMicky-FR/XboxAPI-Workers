@@ -1,5 +1,6 @@
 # XboxAPI Workers
 [![Node.js CI](https://github.com/MrMicky-FR/XboxAPI-Workers/actions/workflows/tests.yml/badge.svg)](https://github.com/MrMicky-FR/XboxAPI-Workers/actions/workflows/tests.yml)
+[![Language grade](https://img.shields.io/lgtm/grade/javascript/github/MrMicky-FR/XboxAPI-Workers.svg?logo=lgtm&logoWidth=18&label=code%20quality)](https://lgtm.com/projects/g/MrMicky-FR/XboxAPI-Workers/context:javascript)
 
 A fast and simple Xbox Live API, built on [Cloudflare Workers](https://workers.cloudflare.com/).
 
@@ -7,14 +8,14 @@ This project uses two [Cloudflare Workers KV](https://www.cloudflare.com/product
 * _(Required)_ `TOKEN_STORE`: Used to store Xbox access tokens
 * _(Optional)_ `PROFILES_CACHE`: Used to cache Xbox profiles to reduce responses time (profiles are cached for one hour)
 
+## Features
+* **Fast**: Running on more than 200 datacenters worldwide thanks to the power of [Cloudflare Workers](https://workers.cloudflare.com/)
+* **Easy to use**: A profile can be fetched with a single GET request
+
 ## Demo
 I host a demo Worker on https://xboxapi.mrmicky.workers.dev/
 
 If you plan to make a lot of requests (like more than 1000 requests per day), please open an issue first and also provide an `User-Agent` to identify your application in the requests.
-
-## Features
-* **Fast**: Running on more than 200 datacenters worldwide thanks to the power of [Cloudflare Workers](https://workers.cloudflare.com/)
-* **Easy to use**: A profile can be fetched with a single GET request
 
 ## Installation
 * Install [Wrangler CLI](https://developers.cloudflare.com/workers/cli-wrangler/install-update)
