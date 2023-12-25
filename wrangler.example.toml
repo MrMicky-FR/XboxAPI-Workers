@@ -1,11 +1,12 @@
 name = "xboxapi-workers"
-type = "javascript"
-zone_id = ""
-account_id = ""
-route = ""
-workers_dev = true
+main = "src/index.ts"
+compatibility_date = "2023-12-21"
 
-kv-namespaces = [
+rules = [
+    { type = "Text", globs = ["src/**/*.html"], fallthrough = true }
+]
+
+kv_namespaces = [
     { binding = "TOKEN_STORE", id = "" },
 #    { binding = "PROFILES_CACHE", id = "" }, # (Optional) Used to reduce responses time
 ]
@@ -13,9 +14,9 @@ kv-namespaces = [
 [secrets]
 XBOX_ACCESS_TOKEN = ""
 XBOX_REFRESH_TOKEN = ""
-#WEBHOOK_URL = ""
 
-[build]
-command = "npm install && npm run build"
-[build.upload]
-format = "service-worker"
+# Microsoft Azure credentials. See https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app
+MS_CLIENT_ID = ""
+MS_CLIENT_SECRET = ""
+
+# WEBHOOK_URL = ""

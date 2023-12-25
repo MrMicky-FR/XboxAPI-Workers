@@ -26,6 +26,9 @@ export interface ApiAuthResponse {
   IssueInstant: string
   NotAfter: string
   Token: string
+  DisplayClaims: {
+    xui: Array<{ xid: string; gtg: string; uhs: string }>
+  }
 }
 
 export interface XboxServiceCache {

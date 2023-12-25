@@ -1,23 +1,20 @@
 # XboxAPI Workers
+
 [![Node.js CI](https://github.com/MrMicky-FR/XboxAPI-Workers/actions/workflows/tests.yml/badge.svg)](https://github.com/MrMicky-FR/XboxAPI-Workers/actions/workflows/tests.yml)
-[![Language grade](https://img.shields.io/lgtm/grade/javascript/github/MrMicky-FR/XboxAPI-Workers.svg?logo=lgtm&logoWidth=18&label=code%20quality)](https://lgtm.com/projects/g/MrMicky-FR/XboxAPI-Workers/context:javascript)
 
 A fast and simple Xbox Live API, built on [Cloudflare Workers](https://workers.cloudflare.com/).
 
-This project uses two [Cloudflare Workers KV](https://www.cloudflare.com/products/workers-kv/) namespaces:
+This project uses two [Cloudflare Workers KV](https://www.cloudflare.com/developer-platform/workers-kv/) namespaces:
 * _(Required)_ `TOKEN_STORE`: Used to store Xbox access tokens
 * _(Optional)_ `PROFILES_CACHE`: Used to cache Xbox profiles to reduce responses time (profiles are cached for one hour)
 
 ## Features
-* **Fast**: Running on more than 200 datacenters worldwide thanks to the power of [Cloudflare Workers](https://workers.cloudflare.com/)
+
+* **Fast**: Running on more than 300 datacenters worldwide thanks to the power of [Cloudflare Workers](https://workers.cloudflare.com/)
 * **Easy to use**: A profile can be fetched with a single GET request
 
-## Demo
-I host a demo Worker on https://xboxapi.mrmicky.workers.dev/
-
-If you plan to make a lot of requests (like more than 1000 requests per day), please open an issue first and also provide an `User-Agent` to identify your application in the requests.
-
 ## Installation
+
 * Install [Wrangler CLI](https://developers.cloudflare.com/workers/cli-wrangler/install-update)
 * Install dependencies with `npm install`
 * Copy `wrangler.example.toml` to `wrangler.toml`
@@ -27,8 +24,9 @@ If you plan to make a lot of requests (like more than 1000 requests per day), pl
 * Publish to Workers with `workers publish`
 
 ### Get your Xbox Live tokens
-* Go on [this link](https://login.live.com/oauth20_authorize.srf?display=touch&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf&locale=en&response_type=token&client_id=0000000048093EE3) in your browser, authenticate and once you reached a blank page, copy the url
-* Extract the `access_token` and `refresh_token` parameters from the copied url (you can also use [this small tool](https://jsfiddle.net/vc361wha/))
+
+* Go on [this link](https://login.live.com/oauth20_authorize.srf?display=touch&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf&locale=en&response_type=token&client_id=0000000048093EE3) in your browser, authenticate and once you reach a blank page, copy the URL
+* Extract the `access_token` and `refresh_token` parameters from the copied URL (you can also use [this tiny tool](https://jsfiddle.net/vc361wha/))
 
 ## Endpoints
 

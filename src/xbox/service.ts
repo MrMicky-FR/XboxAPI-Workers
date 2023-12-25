@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import {
+  ApiAuthResponse,
   ProfileResponse,
   UserCredentials,
   XboxProfile,
@@ -7,23 +8,36 @@ import {
   XboxToken,
 } from './models'
 
-declare const TOKEN_STORE: KVNamespace | undefined
-declare const PROFILES_CACHE: KVNamespace | undefined
-declare const XBOX_ACCESS_TOKEN: string | undefined
-declare const XBOX_REFRESH_TOKEN: string | undefined
+interface Env {
+  TOKEN_STORE?: KVNamespace
+  PROFILES_CACHE?: KVNamespace
+  XBOX_ACCESS_TOKEN?: string
+  XBOX_REFRESH_TOKEN?: string
+  MS_CLIENT_ID?: string
+  MS_CLIENT_SECRET?: string
+}
+
+interface XboxUserResponse {
+  profileUsers: Array<{
+    id: string
+    settings: Array<{ id: string; value: string }>
+  }>
+}
 
 export class XboxService {
   private readonly requests: string[] = []
 
+  private env: Env
   private refreshToken: XboxToken
   private accessToken: XboxToken
   private userToken?: XboxToken
   private xstsToken?: XboxToken
   private user?: UserCredentials
 
-  constructor(cache: XboxServiceCache) {
+  constructor(env: Env, cache: XboxServiceCache) {
     this.refreshToken = XboxToken.deserialize(cache.refreshToken)
     this.accessToken = XboxToken.deserialize(cache.accessToken)
+    this.env = env
 
     if (cache.xstsToken && cache.userToken && cache.user) {
       this.userToken = XboxToken.deserialize(cache.userToken)
@@ -32,28 +46,31 @@ export class XboxService {
     }
   }
 
-  static async create(): Promise<XboxService> {
-    if (typeof TOKEN_STORE !== 'undefined') {
-      const cached = await TOKEN_STORE.get('cache')
+  static async create(env: Env): Promise<XboxService> {
+    if (env.TOKEN_STORE) {
+      const cached = await env.TOKEN_STORE.get('cache')
 
       if (cached) {
-        return new XboxService(JSON.parse(cached))
+        return new XboxService(env, JSON.parse(cached))
       }
     }
 
     const now = DateTime.now()
 
-    if (
-      typeof XBOX_ACCESS_TOKEN !== 'string' ||
-      typeof XBOX_REFRESH_TOKEN !== 'string'
-    ) {
+    if (!env.XBOX_ACCESS_TOKEN || !env.XBOX_REFRESH_TOKEN) {
       throw new Error('No access or refresh token available in environment.')
     }
 
-    return new XboxService({
-      accessToken: new XboxToken(XBOX_ACCESS_TOKEN, now, now.plus({ days: 1 })),
+    return new XboxService(env, {
+      accessToken: new XboxToken(
+        env.XBOX_ACCESS_TOKEN,
+        now,
+        now.plus({
+          days: 1,
+        }),
+      ),
       refreshToken: new XboxToken(
-        XBOX_REFRESH_TOKEN,
+        env.XBOX_REFRESH_TOKEN,
         now,
         now.plus({ months: 1 }),
       ),
@@ -69,26 +86,26 @@ export class XboxService {
   }
 
   private async getProfileByRawId(profileId: string): Promise<ProfileResponse> {
-    if (typeof PROFILES_CACHE === 'undefined') {
+    if (!this.env.PROFILES_CACHE) {
       return this.fetchProfileByRawId(profileId) // No cache is available
     }
 
-    const cached = await PROFILES_CACHE.get(profileId)
+    const cached = await this.env.PROFILES_CACHE.get(profileId)
 
     if (cached) {
       return {
         profile: cached === 'undefined' ? null : JSON.parse(cached),
-        info: `Cached profile`,
+        info: 'Cached profile',
       }
     }
 
-    const response = await this.fetchProfileByRawId(profileId)
+    const res = await this.fetchProfileByRawId(profileId)
 
-    await PROFILES_CACHE.put(profileId, JSON.stringify(response.profile), {
+    await this.env.PROFILES_CACHE.put(profileId, JSON.stringify(res.profile), {
       expirationTtl: 3600, // 1 hour
     })
 
-    return response
+    return res
   }
 
   private async auth() {
@@ -144,7 +161,7 @@ export class XboxService {
       )
     }
 
-    const json = await response.json()
+    const json = await response.json<XboxUserResponse>()
     const data = json.profileUsers[0]
     const xboxProfile: XboxProfile = { xuid: data.id }
 
@@ -170,25 +187,31 @@ export class XboxService {
 
     return {
       profile: xboxProfile,
-      info: `Response from Xbox API (${this.requests.join(',')})`,
+      info: `Response from Xbox API (${this.requests.join(', ')})`,
     }
   }
 
   private async refreshAccessToken() {
     this.requests.push('refresh')
 
-    const query =
-      'grant_type=refresh_token&client_id=0000000048093EE3&scope=service::user.auth.xboxlive.com::MBI_SSL'
+    if (!this.env.MS_CLIENT_ID || !this.env.MS_CLIENT_SECRET) {
+      throw new Error('Missing client ID/Secret')
+    }
 
-    const response = await fetch(
-      `https://login.live.com/oauth20_token.srf?${query}&refresh_token=${this.refreshToken.token}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'XboxAPI-Workers',
-        },
+    const response = await fetch('https://login.live.com/oauth20_token.srf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'XboxAPI-Workers',
       },
-    )
+      body: new URLSearchParams({
+        client_id: this.env.MS_CLIENT_ID,
+        client_secret: this.env.MS_CLIENT_SECRET,
+        refresh_token: this.refreshToken.token,
+        grant_type: 'refresh_token',
+        scope: 'Xboxlive.signin Xboxlive.offline_access',
+      }),
+    })
 
     if (!response.ok) {
       throw new Error(`Invalid status from Xbox refresh: ${response.status}`)
@@ -224,7 +247,7 @@ export class XboxService {
           Properties: {
             AuthMethod: 'RPS',
             SiteName: 'user.auth.xboxlive.com',
-            RpsTicket: this.accessToken.token,
+            RpsTicket: `d=${this.accessToken.token}`,
           },
         }),
       },
@@ -272,31 +295,26 @@ export class XboxService {
       )
     }
 
-    const json = await response.json()
+    const json = await response.json<ApiAuthResponse>()
     const xui = json.DisplayClaims.xui[0]
 
     this.xstsToken = XboxToken.fromAuthResponse(json)
-    this.user = {
-      id: xui.xid,
-      name: xui.gtg,
-      hash: xui.uhs,
-    }
+    this.user = { id: xui.xid, name: xui.gtg, hash: xui.uhs }
   }
 
   async cacheService(): Promise<void> {
-    if (typeof TOKEN_STORE === 'undefined') {
+    if (!this.env.TOKEN_STORE) {
       return
     }
 
-    return TOKEN_STORE.put(
-      'cache',
-      JSON.stringify({
-        refreshToken: this.refreshToken,
-        accessToken: this.accessToken,
-        userToken: this.userToken,
-        xstsToken: this.xstsToken,
-        user: this.user,
-      }),
-    )
+    const tokens = {
+      refreshToken: this.refreshToken,
+      accessToken: this.accessToken,
+      userToken: this.userToken,
+      xstsToken: this.xstsToken,
+      user: this.user,
+    }
+
+    return this.env.TOKEN_STORE.put('cache', JSON.stringify(tokens))
   }
 }
