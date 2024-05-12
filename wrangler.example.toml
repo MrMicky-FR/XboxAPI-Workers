@@ -1,10 +1,6 @@
 name = "xboxapi-workers"
 main = "src/index.ts"
-compatibility_date = "2023-12-21"
-
-rules = [
-    { type = "Text", globs = ["src/**/*.html"], fallthrough = true }
-]
+compatibility_date = "2024-05-12"
 
 kv_namespaces = [
     { binding = "TOKEN_STORE", id = "" },

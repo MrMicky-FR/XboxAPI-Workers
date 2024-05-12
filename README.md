@@ -21,7 +21,7 @@ This project uses two [Cloudflare Workers KV](https://www.cloudflare.com/develop
 * Create a KV namespace named `TOKENS_STORE` and add its id in the `wrangler.toml`
 * _(Optional)_ Create a KV namespace named `PROFILES_CACHE` and add its id in the `wrangler.toml`
 * Configure the `XBOX_ACCESS_TOKEN` and `XBOX_REFRESH_TOKEN` variables in the `wrangler.toml` with your Xbox Live tokens (see below to obtain them)
-* Publish to Workers with `workers publish`
+* Deploy to Workers with `workers deploy`
 
 ### Get your Xbox Live tokens
 
@@ -32,7 +32,7 @@ This project uses two [Cloudflare Workers KV](https://www.cloudflare.com/develop
 
 ### Fetch a profile by XUID
 
-**GET** `/profile/{xuid}`
+**GET** `/profiles/{xuid}`
 
 Example profile:
 ```json
@@ -50,7 +50,7 @@ Example profile:
 
 ### Fetch a profile by Gamertag
 
-**GET** `/search/{gamertag}`
+**GET** `/profiles/search/{gamertag}`
 
 Example profile:
 ```json

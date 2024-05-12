@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { addMonths, addSeconds } from './date'
 
 export interface XboxProfile {
   xuid: string
@@ -47,17 +47,17 @@ export interface SerializedXboxToken {
 
 export class XboxToken {
   token: string
-  created: DateTime
-  expire: DateTime
+  created: Date
+  expire: Date
 
-  constructor(token: string, created: DateTime, expire: DateTime) {
+  constructor(token: string, created: Date, expire: Date) {
     this.token = token
     this.created = created
     this.expire = expire
   }
 
   isExpired(): boolean {
-    return this.expire < DateTime.now()
+    return this.expire.getTime() < Date.now()
   }
 
   isValid(): boolean {
@@ -65,8 +65,8 @@ export class XboxToken {
   }
 
   static fromAuthResponse(response: ApiAuthResponse): XboxToken {
-    const created = DateTime.fromISO(response.IssueInstant)
-    const expire = DateTime.fromISO(response.NotAfter)
+    const created = new Date(response.IssueInstant)
+    const expire = new Date(response.NotAfter)
 
     return new XboxToken(response.Token, created, expire)
   }
@@ -74,12 +74,12 @@ export class XboxToken {
   static fromRefreshResponse(
     response: ApiRefreshResponse,
   ): [XboxToken, XboxToken] {
-    const now = DateTime.now()
-    const accessExpire = now.plus({ seconds: response.expires_in })
+    const now = new Date()
+    const accessExpire = addSeconds(now, response.expires_in)
 
     return [
       new XboxToken(response.access_token, now, accessExpire),
-      new XboxToken(response.refresh_token, now, now.plus({ months: 1 })),
+      new XboxToken(response.refresh_token, now, addMonths(now, 1)),
     ]
   }
 
@@ -88,8 +88,8 @@ export class XboxToken {
       return token
     }
 
-    const created = DateTime.fromISO(token.created)
-    const expire = DateTime.fromISO(token.expire)
+    const created = new Date(token.created)
+    const expire = new Date(token.expire)
 
     return new XboxToken(token.token, created, expire)
   }

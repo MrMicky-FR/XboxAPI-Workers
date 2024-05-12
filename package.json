@@ -4,7 +4,7 @@
   "description": "A fast and simple Xbox Live API, built on Cloudflare Workers.",
   "scripts": {
     "start": "wrangler dev",
-    "publish": "wrangler publish",
+    "deploy": "wrangler deploy",
     "format": "prettier --write  '*.{json,js}' 'src/**/*.ts'",
     "lint": "eslint . --ext .js,.ts --fix --ignore-path .gitignore"
   },
@@ -18,12 +18,10 @@
     ]
   },
   "dependencies": {
-    "itty-router": "^4.0.9",
-    "luxon": "^3.0.1"
+    "itty-router": "^4.0.9"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
-    "@types/luxon": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.21.0",

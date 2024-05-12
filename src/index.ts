@@ -1,6 +1,6 @@
 import type { IRequest } from 'itty-router'
 
-import { Router, error, json, html } from 'itty-router'
+import { Router, error, html, text } from 'itty-router'
 import { XboxService } from './xbox/service'
 import home from './home.html'
 
@@ -18,7 +18,7 @@ router
   .get('/auth/callback', handleAuthCallback)
   .get('/profiles/search/:name', handleSearchRequest)
   .get('/profiles/:id', handleProfileRequest)
-  .get('/search/:name', handleSearchRequest)
+  .get('/robots.txt', () => text('User-agent: *\nAllow: /$\nDisallow: /'))
   .all('*', () => error(404))
 
 export default {
@@ -133,7 +133,7 @@ async function handleProfileRequest(request: IRequest, env: Env) {
     return error(404, `User '${id}' not found (${response.info})`)
   }
 
-  return json({ ...response.profile, debug: response.info })
+  return Response.json({ ...response.profile, debug: response.info })
 }
 
 async function handleSearchRequest(request: IRequest, env: Env) {
@@ -150,7 +150,7 @@ async function handleSearchRequest(request: IRequest, env: Env) {
     return error(404, `User '${name}' not found (${response.info})`)
   }
 
-  return json({ ...response.profile, debug: response.info })
+  return Response.json({ ...response.profile, debug: response.info })
 }
 
 async function handleHome() {

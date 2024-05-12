@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { addDays, addMonths } from './date'
 import {
   ApiAuthResponse,
   ProfileResponse,
@@ -55,24 +55,18 @@ export class XboxService {
       }
     }
 
-    const now = DateTime.now()
+    const now = new Date()
 
     if (!env.XBOX_ACCESS_TOKEN || !env.XBOX_REFRESH_TOKEN) {
       throw new Error('No access or refresh token available in environment.')
     }
 
     return new XboxService(env, {
-      accessToken: new XboxToken(
-        env.XBOX_ACCESS_TOKEN,
-        now,
-        now.plus({
-          days: 1,
-        }),
-      ),
+      accessToken: new XboxToken(env.XBOX_ACCESS_TOKEN, now, addDays(now, 1)),
       refreshToken: new XboxToken(
         env.XBOX_REFRESH_TOKEN,
         now,
-        now.plus({ months: 1 }),
+        addMonths(now, 1),
       ),
     })
   }
